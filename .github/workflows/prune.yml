@@ -32,7 +32,7 @@ jobs:
             git checkout "$branch"
 
             git filter-repo --force --commit-callback '
-              commit_time = int(commit.author_date)
+              commit_time = int(commit.author_date.split()[0])
               if commit_time < '"$cutoff"':
                   commit.message = b""
                   commit.author_name = b""
