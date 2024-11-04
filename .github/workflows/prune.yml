@@ -3,6 +3,7 @@ name: Prune Commits Older Than 2 Hours
 on:
   schedule:
     - cron: "0 */2 * * *"  # Every 2 hours
+  workflow_dispatch:
 
 jobs:
   prune_old_commits:
