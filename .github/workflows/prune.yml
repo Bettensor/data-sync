@@ -1,8 +1,8 @@
-name: Prune Commits Older Than 3 Hours
+name: Prune Commits Older Than 2 Hours
 
 on:
   schedule:
-    - cron: "0 */3 * * *"  # Every 3 hours
+    - cron: "0 */2 * * *"  # Every 2 hours
 
 jobs:
   prune_old_commits:
@@ -24,7 +24,7 @@ jobs:
 
       - name: Prune commits older than 6 hours on multiple branches
         run: |
-          cutoff=$(date -d "3 hours ago" +"%s")
+          cutoff=$(date -d "2 hours ago" +"%s")
           branches=("main" "test")
 
           for branch in "${branches[@]}"; do
