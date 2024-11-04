@@ -2,8 +2,8 @@ name: Prune Commits Older Than 2 Hours
 
 on:
   schedule:
-    - cron: "0 */2 * * *"  # Every 2 hours
-  workflow_dispatch:
+    - cron: "0 */2 * * *"  # Every 6 hours
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   prune_old_commits:
@@ -23,7 +23,9 @@ jobs:
         run: |
           pip install git-filter-repo
 
-      - name: Prune commits older than 6 hours on multiple branches
+      - name: Prune commits older than 2 hours on multiple branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cutoff=$(date -d "2 hours ago" +"%s")
           branches=("main" "test")
@@ -32,7 +34,8 @@ jobs:
             git checkout "$branch"
 
             git filter-repo --force --commit-callback '
-              commit_time = int(commit.author_date.split()[0])
+              # Strip any timezone information to use only the UNIX timestamp
+              commit_time = int(commit.author_date.split()[0])  # Get timestamp only
               if commit_time < '"$cutoff"':
                   commit.message = b""
                   commit.author_name = b""
@@ -41,5 +44,9 @@ jobs:
                   commit.committer_email = b""
             '
 
+            # Re-add the origin remote
+            git remote add origin https://github.com/${{ github.repository }}.git
+
+            # Push the changes to GitHub, overwriting the remote history
             git push --force origin "$branch"
           done
