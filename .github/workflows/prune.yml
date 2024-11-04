@@ -1,8 +1,8 @@
-name: Prune Commits Older Than 6 Hours
+name: Prune Commits Older Than 3 Hours
 
 on:
   schedule:
-    - cron: "0 */4 * * *"  # Every 6 hours
+    - cron: "0 */3 * * *"  # Every 3 hours
 
 jobs:
   prune_old_commits:
@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch entire history for filtering
 
       - name: Set Up Python
         uses: actions/setup-python@v2
@@ -22,16 +22,23 @@ jobs:
         run: |
           pip install git-filter-repo
 
-      - name: Prune commits older than 6 hours
+      - name: Prune commits older than 6 hours on multiple branches
         run: |
-          cutoff=$(date -d "6 hours ago" +"%s")
-          git filter-repo --force --commit-callback '
-            commit_time = int(commit.author_date)
-            if commit_time < '"$cutoff"':
-                commit.message = b""
-                commit.author_name = b""
-                commit.author_email = b""
-                commit.committer_name = b""
-                commit.committer_email = b""
-          '
-          git push --force
+          cutoff=$(date -d "3 hours ago" +"%s")
+          branches=("main" "test")
+
+          for branch in "${branches[@]}"; do
+            git checkout "$branch"
+
+            git filter-repo --force --commit-callback '
+              commit_time = int(commit.author_date)
+              if commit_time < '"$cutoff"':
+                  commit.message = b""
+                  commit.author_name = b""
+                  commit.author_email = b""
+                  commit.committer_name = b""
+                  commit.committer_email = b""
+            '
+
+            git push --force origin "$branch"
+          done
