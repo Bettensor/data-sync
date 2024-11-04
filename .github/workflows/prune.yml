@@ -1,0 +1,37 @@
+name: Prune Commits Older Than 6 Hours
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"  # Every 6 hours
+
+jobs:
+  prune_old_commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install git-filter-repo
+        run: |
+          pip install git-filter-repo
+
+      - name: Prune commits older than 6 hours
+        run: |
+          cutoff=$(date -d "6 hours ago" +"%s")
+          git filter-repo --force --commit-callback '
+            commit_time = int(commit.author_date)
+            if commit_time < '"$cutoff"':
+                commit.message = b""
+                commit.author_name = b""
+                commit.author_email = b""
+                commit.committer_name = b""
+                commit.committer_email = b""
+          '
+          git push --force
